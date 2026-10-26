@@ -110,7 +110,7 @@ autoplay="true">
 blog_live_time();
 </script></div></footer></div><a class="hty-icon-button" id="back-to-top" aria-label="back-to-top" href="#"><span class="icon iconify" data-icon="ri:arrow-up-s-line"></span><svg class="progress-circle-container" viewBox="0 0 100 100"><circle class="progress-circle" id="progressCircle" cx="50" cy="50" r="48" fill="none" stroke="#0078E7" stroke-width="2" stroke-linecap="round"></circle></svg></a><!-- hexo injector body_end start -->
   <style>
-    /* 按钮：初始给个兜底位置，JS 会覆盖 */
+    /* 按钮：初始给兜底位置，JS 会按 canvas 实际位置覆盖 */
     #ai-waifu-toggle {
       position: fixed;
       left: 0;
@@ -127,7 +127,7 @@ blog_live_time();
       box-shadow: 0 4px 14px rgba(37, 99, 235, .4);
       animation: ai-breathe 2.8s ease-in-out infinite;
       transition: transform .2s ease, left .15s ease, top .15s ease;
-      display: none; /* canvas 就绪后再显示 */
+      display: none; /* 等 canvas 就绪后再显示 */
     }
     #ai-waifu-toggle:hover { transform: scale(1.12) rotate(-4deg); }
     @keyframes ai-breathe {
@@ -135,7 +135,7 @@ blog_live_time();
       50%      { box-shadow: 0 6px 24px rgba(37, 99, 235, .75); }
     }
 
-    /* 面板：初始隐藏，位置由 JS 计算 */
+    /* 聊天面板：位置由 JS 计算，默认在按钮左上方 */
     #ai-waifu-panel {
       position: fixed;
       left: 0;
@@ -162,7 +162,7 @@ blog_live_time();
       transform: scale(1);
       pointer-events: auto;
     }
-    /* 尾巴：面板右下角，指向按钮 */
+    /* 尾巴：指向按钮 */
     #ai-waifu-panel::after {
       content: '';
       position: absolute;
@@ -265,14 +265,14 @@ blog_live_time();
     #ai-waifu-send:disabled { background: #94a3b8; cursor: not-allowed; }
   </style>
 
-  <button id="ai-waifu-toggle" title="和小灵聊天">💬</button>
+  <button id="ai-waifu-toggle" title="和小灵聊聊天">🐾</button>
   <div id="ai-waifu-panel">
     <div id="ai-waifu-header">
-      <span class="dot"></span> 看板娘小灵 · 在线
+      <span class="dot"></span> 小灵 · 在线
     </div>
     <div id="ai-waifu-messages"></div>
     <div id="ai-waifu-input-row">
-      <input id="ai-waifu-input" placeholder="和看板娘说点什么…" />
+      <input id="ai-waifu-input" placeholder="和小灵说点什么…" />
       <button id="ai-waifu-send">发送</button>
     </div>
   </div>
@@ -282,7 +282,7 @@ blog_live_time();
       var WORKER_URL = 'https://my-blog-ai-proxy.927793613.workers.dev/v1/chat/completions';
       var MODEL = 'glm-4-flash';
       var messages = [
-        { role: 'system', content: '你是博客的看板娘 小灵，回答要简短、可爱、像朋友一样聊天。' }
+        { role: 'system', content: '你是博客的看板娘，名字叫小灵，是一只聪明可爱的小狗。回答要简短、可爱、像朋友一样聊天。' }
       ];
 
       var toggle = document.getElementById('ai-waifu-toggle');
@@ -296,29 +296,26 @@ blog_live_time();
       var PANEL_W = 300;
       var PANEL_MAX_H = 380;
 
-      /* ===== 动态定位核心 ===== */
+      /* ===== 动态定位核心：按钮贴着看板娘头部 ===== */
       function positionWidgets() {
         if (!canvasEl) return;
         var r = canvasEl.getBoundingClientRect();
-        if (!r.width || r.bottom < 0) return; // canvas 不在可视区
+        if (!r.width || r.bottom < 0) return;
 
-        // 按钮：右边缘压住 canvas 左边缘 8px，垂直在 canvas 顶部往下 30px（头部附近）
-        var btnLeft = r.left - BTN_SIZE;
+        // 按钮：右边缘压住 canvas 左边缘 8px，垂直在 canvas 顶部往下 30px
+        var btnLeft = r.left - BTN_SIZE + 8;
         var btnTop  = r.top + 30;
-
-        // 防止按钮跑出左边界
         if (btnLeft < 8) btnLeft = 8;
         toggle.style.left = btnLeft + 'px';
         toggle.style.top  = btnTop + 'px';
 
-        // 面板：右下角对准按钮，默认在按钮左上方
+        // 面板：右下角对准按钮，默认在按钮左上方；空间不够则翻到下方
         var panelH = panel.offsetHeight || PANEL_MAX_H;
-        var pLeft = btnLeft + BTN_SIZE - PANEL_W; // 面板右边与按钮右边对齐
-        var pTop  = btnTop - panelH - 12;         // 面板底部在按钮上方 12px
+        var pLeft = btnLeft + BTN_SIZE - PANEL_W;
+        var pTop  = btnTop - panelH - 12;
         var below = false;
-
         if (pLeft < 8) pLeft = 8;
-        if (pTop < 8) {                            // 上方空间不够，翻到按钮下方
+        if (pTop < 8) {
           pTop = btnTop + BTN_SIZE + 12;
           below = true;
         }
@@ -327,7 +324,7 @@ blog_live_time();
         panel.classList.toggle('below', below);
       }
 
-      /* 等待 canvas 出现并监听其尺寸变化 */
+      /* 等待 canvas 出现，并监听其尺寸变化 */
       function watchCanvas() {
         var c = document.getElementById('live2dcanvas') ||
                 document.querySelector('.live2d canvas') ||
@@ -336,7 +333,6 @@ blog_live_time();
         canvasEl = c;
         toggle.style.display = 'block';
         positionWidgets();
-
         if (window.ResizeObserver) {
           new ResizeObserver(positionWidgets).observe(canvasEl);
         }
@@ -346,13 +342,13 @@ blog_live_time();
       var tries = 0;
       var timer = setInterval(function () {
         tries++;
-        if (watchCanvas() || tries > 40) clearInterval(timer); // 最多等 12 秒
+        if (watchCanvas() || tries > 40) clearInterval(timer);
       }, 300);
 
       window.addEventListener('resize', positionWidgets);
       window.addEventListener('scroll', positionWidgets, { passive: true });
 
-      /* ===== 看板娘动作（防御性调用） ===== */
+      /* ===== 看板娘动作（防御性调用，失败不影响聊天） ===== */
       function playMotion(name) {
         try {
           var m = (window.L2Dwidget && (window.L2Dwidget.model || window.L2Dwidget._model)) ||
@@ -365,7 +361,7 @@ blog_live_time();
       toggle.addEventListener('click', function () {
         panel.classList.toggle('open');
         if (panel.classList.contains('open')) {
-          positionWidgets(); // 打开时按实际高度重新定位
+          positionWidgets();
           input.focus();
           playMotion('tap_body');
         }
@@ -412,7 +408,7 @@ blog_live_time();
           pending.classList.remove('pending');
           messages.push({ role: 'assistant', content: reply });
           playMotion('tap_body');
-          positionWidgets(); // 消息变多后重新定位，避免面板超屏
+          positionWidgets();
         })
         .catch(function () {
           pending.textContent = '呜…好像连不上我的大脑，稍后再试试吧。';
