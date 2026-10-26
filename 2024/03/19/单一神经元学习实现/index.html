@@ -261,7 +261,7 @@ blog_live_time();
   <button id="ai-waifu-toggle" title="和看板娘聊天">💬</button>
   <div id="ai-waifu-panel">
     <div id="ai-waifu-header">
-      <span class="dot"></span> 看板娘 · 在线
+      <span class="dot"></span> 看板娘小灵 · 在线
     </div>
     <div id="ai-waifu-messages"></div>
     <div id="ai-waifu-input-row">
@@ -296,7 +296,7 @@ blog_live_time();
         if (!r.width || r.bottom < 0) return; // canvas 不在可视区
 
         // 按钮：右边缘压住 canvas 左边缘 8px，垂直在 canvas 顶部往下 30px（头部附近）
-        var btnLeft = r.left - BTN_SIZE + 8;
+        var btnLeft = r.left - BTN_SIZE;
         var btnTop  = r.top + 30;
 
         // 防止按钮跑出左边界
