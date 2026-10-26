@@ -120,14 +120,14 @@ blog_live_time();
       50%      { box-shadow: 0 6px 24px rgba(37, 99, 235, .75); }
     }
 
-    /* 聊天面板：默认在按钮正上方，无三角 */
+    /* 聊天面板：高度固定，位置不再随消息数跳动 */
     #ai-waifu-panel {
       position: fixed;
       left: 0;
       top: 0;
       z-index: 99999;
       width: 300px;
-      max-height: 380px;
+      height: min(380px, 60vh);   /* 固定高度：桌面 380px，小屏 60vh */
       display: flex;
       flex-direction: column;
       background: rgba(255, 255, 255, .97);
@@ -147,7 +147,6 @@ blog_live_time();
       transform: scale(1);
       pointer-events: auto;
     }
-    /* 面板翻到按钮下方时，长出方向改为顶部 */
     #ai-waifu-panel.below {
       transform-origin: top right;
     }
@@ -162,6 +161,7 @@ blog_live_time();
       font-size: 14px;
       font-weight: 500;
       border-radius: 16px 16px 0 0;
+      flex-shrink: 0;
     }
     #ai-waifu-header .dot {
       width: 8px; height: 8px; border-radius: 50%;
@@ -213,6 +213,7 @@ blog_live_time();
       background: #fff;
       border-radius: 0 0 16px 16px;
       overflow: hidden;
+      flex-shrink: 0;
     }
     #ai-waifu-input {
       flex: 1;
@@ -264,7 +265,6 @@ blog_live_time();
       var canvasEl = null;
       var BTN_SIZE = 46;
       var PANEL_W = 300;
-      var PANEL_MAX_H = 380;
 
       /* ===== 动态定位：按钮贴看板娘头部，面板在按钮正上方 ===== */
       function positionWidgets() {
@@ -272,22 +272,19 @@ blog_live_time();
         var r = canvasEl.getBoundingClientRect();
         if (!r.width || r.bottom < 0) return;
 
-        // 按钮位置（保留你调好的参数）
         var btnLeft = r.left - BTN_SIZE + 60;
         var btnTop  = r.top + 60;
         if (btnLeft < 8) btnLeft = 8;
         toggle.style.left = btnLeft + 'px';
         toggle.style.top  = btnTop + 'px';
 
-        // 面板：右边缘与按钮右边缘对齐，放在按钮正上方
-        var panelH = panel.offsetHeight || PANEL_MAX_H;
-        var pLeft = btnLeft + BTN_SIZE - PANEL_W;   // 右对齐按钮
-        var pTop  = btnTop - panelH - 12;           // 按钮上方留 12px 间隙
+        // 面板高度已固定，offsetHeight 稳定，不再随消息数变化
+        var panelH = panel.offsetHeight || 380;
+        var pLeft = btnLeft + BTN_SIZE - PANEL_W;
+        var pTop  = btnTop - panelH - 12;
         var below = false;
 
-        // 左边超出屏幕，右移
         if (pLeft < 8) pLeft = 8;
-        // 上方空间不够，翻到按钮下方
         if (pTop < 8) {
           pTop = btnTop + BTN_SIZE + 12;
           below = true;
@@ -298,7 +295,6 @@ blog_live_time();
         panel.classList.toggle('below', below);
       }
 
-      /* 等待 canvas 出现，并监听其尺寸变化 */
       function watchCanvas() {
         var c = document.getElementById('live2dcanvas') ||
                 document.querySelector('.live2d canvas') ||
@@ -322,7 +318,6 @@ blog_live_time();
       window.addEventListener('resize', positionWidgets);
       window.addEventListener('scroll', positionWidgets, { passive: true });
 
-      /* ===== 看板娘动作（防御性调用） ===== */
       function playMotion(name) {
         try {
           var m = (window.L2Dwidget && (window.L2Dwidget.model || window.L2Dwidget._model)) ||
@@ -331,7 +326,6 @@ blog_live_time();
         } catch (e) {}
       }
 
-      /* ===== 交互 ===== */
       toggle.addEventListener('click', function () {
         panel.classList.toggle('open');
         if (panel.classList.contains('open')) {
@@ -382,7 +376,7 @@ blog_live_time();
           pending.classList.remove('pending');
           messages.push({ role: 'assistant', content: reply });
           playMotion('tap_body');
-          positionWidgets();
+          // 不再调用 positionWidgets()，面板高度固定，位置不会变
         })
         .catch(function () {
           pending.textContent = '呜…好像连不上我的大脑，稍后再试试吧。';
