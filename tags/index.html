@@ -244,8 +244,8 @@ blog_live_time();
         if (!r.width || r.bottom < 0) return;
 
         // 按钮：右边缘压住 canvas 左边缘 8px，垂直在 canvas 顶部往下 30px
-        var btnLeft = r.left - BTN_SIZE + 8;
-        var btnTop  = r.top + 30;
+        var btnLeft = r.left - BTN_SIZE + 20;
+        var btnTop  = r.top + 45;
         if (btnLeft < 8) btnLeft = 8;
         toggle.style.left = btnLeft + 'px';
         toggle.style.top  = btnTop + 'px';
