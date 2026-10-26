@@ -63,102 +63,116 @@ IconifyProviders = {
 blog_live_time();
 </script></div></footer></div><a class="hty-icon-button" id="back-to-top" aria-label="back-to-top" href="#"><span class="icon iconify" data-icon="ri:arrow-up-s-line"></span><svg class="progress-circle-container" viewBox="0 0 100 100"><circle class="progress-circle" id="progressCircle" cx="50" cy="50" r="48" fill="none" stroke="#0078E7" stroke-width="2" stroke-linecap="round"></circle></svg></a><!-- hexo injector body_end start -->
   <style>
-    /* 聊天按钮：贴在看板娘头部左上方 */
+    /* 按钮：初始给个兜底位置，JS 会覆盖 */
     #ai-waifu-toggle {
       position: fixed;
-      right: 10px;          /* 可调：数值越小越靠右 */
-      bottom: 290px;        /* 可调：看板娘头顶大概位置，调大往上 */
-      z-index: 9999;
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
+      left: 0;
+      top: 0;
+      z-index: 99999;
+      width: 46px;
+      height: 46px;
+      border-radius: 50% 50% 50% 4px;
       border: none;
-      background: linear-gradient(135deg, #60a5fa, #2563eb);
+      background: linear-gradient(135deg, #7dd3fc, #2563eb);
       color: #fff;
       font-size: 20px;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(37, 99, 235, .35);
-      animation: ai-breathe 2.6s ease-in-out infinite;
-      transition: transform .2s ease;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, .4);
+      animation: ai-breathe 2.8s ease-in-out infinite;
+      transition: transform .2s ease, left .15s ease, top .15s ease;
+      display: none; /* canvas 就绪后再显示 */
     }
-    #ai-waifu-toggle:hover { transform: scale(1.1); }
+    #ai-waifu-toggle:hover { transform: scale(1.12) rotate(-4deg); }
     @keyframes ai-breathe {
-      0%, 100% { box-shadow: 0 4px 12px rgba(37, 99, 235, .35); }
-      50%      { box-shadow: 0 4px 20px rgba(37, 99, 235, .65); }
+      0%, 100% { box-shadow: 0 4px 14px rgba(37, 99, 235, .4); }
+      50%      { box-shadow: 0 6px 24px rgba(37, 99, 235, .75); }
     }
 
-    /* 对话面板：从按钮左上方展开，带指向按钮的小三角 */
+    /* 面板：初始隐藏，位置由 JS 计算 */
     #ai-waifu-panel {
       position: fixed;
-      right: 16px;          /* 可调：和按钮右边对齐 */
-      bottom: 340px;        /* 可调：略高于按钮，展开后不遮挡看板娘头部 */
-      z-index: 9999;
+      left: 0;
+      top: 0;
+      z-index: 99999;
       width: 300px;
       max-height: 380px;
       display: flex;
       flex-direction: column;
-      background: rgba(255, 255, 255, .96);
+      background: rgba(255, 255, 255, .97);
       backdrop-filter: blur(8px);
-      border-radius: 14px;
-      box-shadow: 0 12px 32px rgba(0, 0, 0, .18);
-      overflow: hidden;
+      border-radius: 16px;
+      box-shadow: 0 14px 36px rgba(0, 0, 0, .2);
+      overflow: visible;
       font-size: 14px;
       opacity: 0;
-      transform: translateY(8px) scale(.96);
+      transform: scale(.94);
+      transform-origin: bottom right;
       pointer-events: none;
-      transition: opacity .22s ease, transform .22s ease;
+      transition: opacity .24s ease, transform .24s cubic-bezier(.2, .9, .3, 1.2);
     }
     #ai-waifu-panel.open {
       opacity: 1;
-      transform: translateY(0) scale(1);
+      transform: scale(1);
       pointer-events: auto;
     }
-    /* 指向按钮的小三角 */
+    /* 尾巴：面板右下角，指向按钮 */
     #ai-waifu-panel::after {
       content: '';
       position: absolute;
-      right: 22px;          /* 对准按钮中心 */
-      bottom: -8px;
-      width: 16px;
-      height: 16px;
-      background: rgba(255, 255, 255, .96);
+      right: -8px;
+      bottom: 18px;
+      width: 18px;
+      height: 18px;
+      background: rgba(255, 255, 255, .97);
       transform: rotate(45deg);
-      box-shadow: 4px 4px 8px rgba(0, 0, 0, .06);
-      border-radius: 2px;
+      box-shadow: 4px -4px 10px rgba(0, 0, 0, .05);
+      border-radius: 3px;
+    }
+    /* 面板翻到按钮下方时，尾巴翻到顶部 */
+    #ai-waifu-panel.below::after {
+      bottom: auto;
+      top: -8px;
+      box-shadow: -4px 4px 10px rgba(0, 0, 0, .05);
     }
 
     #ai-waifu-header {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 10px 14px;
-      background: linear-gradient(135deg, #60a5fa, #2563eb);
+      padding: 11px 16px;
+      background: linear-gradient(135deg, #7dd3fc, #2563eb);
       color: #fff;
       font-size: 14px;
       font-weight: 500;
+      border-radius: 16px 16px 0 0;
     }
     #ai-waifu-header .dot {
       width: 8px; height: 8px; border-radius: 50%;
       background: #4ade80;
-      box-shadow: 0 0 6px #4ade80;
+      box-shadow: 0 0 8px #4ade80;
+      animation: ai-dot 1.6s ease-in-out infinite;
+    }
+    @keyframes ai-dot {
+      0%, 100% { opacity: 1; }
+      50%      { opacity: .45; }
     }
 
     #ai-waifu-messages {
       flex: 1;
       overflow-y: auto;
-      padding: 12px;
+      padding: 14px 12px;
       background: #f8fafc;
       scrollbar-width: thin;
     }
-    .ai-msg { margin-bottom: 10px; line-height: 1.5; display: flex; }
+    .ai-msg { margin-bottom: 10px; line-height: 1.55; display: flex; }
     .ai-msg.user { justify-content: flex-end; }
     .ai-msg span {
       display: inline-block;
-      padding: 7px 11px;
-      border-radius: 12px;
-      max-width: 82%;
+      padding: 8px 12px;
+      border-radius: 14px;
+      max-width: 84%;
       word-break: break-word;
-      animation: ai-pop .18s ease;
+      animation: ai-pop .2s ease;
     }
     .ai-msg.user span {
       background: #2563eb;
@@ -170,20 +184,23 @@ blog_live_time();
       color: #1e293b;
       border-bottom-left-radius: 4px;
     }
+    .ai-msg.bot span.pending { color: #94a3b8; font-style: italic; }
     @keyframes ai-pop {
-      from { opacity: 0; transform: translateY(4px); }
-      to   { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translateY(5px) scale(.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     #ai-waifu-input-row {
       display: flex;
       border-top: 1px solid #e2e8f0;
       background: #fff;
+      border-radius: 0 0 16px 16px;
+      overflow: hidden;
     }
     #ai-waifu-input {
       flex: 1;
       border: none;
-      padding: 10px 12px;
+      padding: 11px 14px;
       outline: none;
       font-size: 14px;
       background: transparent;
@@ -192,7 +209,7 @@ blog_live_time();
       border: none;
       background: #2563eb;
       color: #fff;
-      padding: 0 16px;
+      padding: 0 18px;
       cursor: pointer;
       font-size: 14px;
       transition: background .2s;
@@ -215,27 +232,102 @@ blog_live_time();
 
   <script>
     (function () {
-      const WORKER_URL = 'https://my-blog-ai-proxy.927793613.workers.dev/v1/chat/completions';
-      const MODEL = 'glm-4-flash';
-      const messages = [
-        { role: 'system', content: '你是博客的看板娘，回答要简短、可爱、像朋友一样聊天。' }
+      var WORKER_URL = 'https://my-blog-ai-proxy.927793613.workers.dev/v1/chat/completions';
+      var MODEL = 'glm-4-flash';
+      var messages = [
+        { role: 'system', content: '你是博客的看板娘 wanko，回答要简短、可爱、像朋友一样聊天。' }
       ];
 
-      const toggle = document.getElementById('ai-waifu-toggle');
-      const panel = document.getElementById('ai-waifu-panel');
-      const list = document.getElementById('ai-waifu-messages');
-      const input = document.getElementById('ai-waifu-input');
-      const send = document.getElementById('ai-waifu-send');
+      var toggle = document.getElementById('ai-waifu-toggle');
+      var panel = document.getElementById('ai-waifu-panel');
+      var list = document.getElementById('ai-waifu-messages');
+      var input = document.getElementById('ai-waifu-input');
+      var send = document.getElementById('ai-waifu-send');
 
-      toggle.addEventListener('click', () => {
+      var canvasEl = null;
+      var BTN_SIZE = 46;
+      var PANEL_W = 300;
+      var PANEL_MAX_H = 380;
+
+      /* ===== 动态定位核心 ===== */
+      function positionWidgets() {
+        if (!canvasEl) return;
+        var r = canvasEl.getBoundingClientRect();
+        if (!r.width || r.bottom < 0) return; // canvas 不在可视区
+
+        // 按钮：右边缘压住 canvas 左边缘 8px，垂直在 canvas 顶部往下 30px（头部附近）
+        var btnLeft = r.left - BTN_SIZE + 8;
+        var btnTop  = r.top + 30;
+
+        // 防止按钮跑出左边界
+        if (btnLeft < 8) btnLeft = 8;
+        toggle.style.left = btnLeft + 'px';
+        toggle.style.top  = btnTop + 'px';
+
+        // 面板：右下角对准按钮，默认在按钮左上方
+        var panelH = panel.offsetHeight || PANEL_MAX_H;
+        var pLeft = btnLeft + BTN_SIZE - PANEL_W; // 面板右边与按钮右边对齐
+        var pTop  = btnTop - panelH - 12;         // 面板底部在按钮上方 12px
+        var below = false;
+
+        if (pLeft < 8) pLeft = 8;
+        if (pTop < 8) {                            // 上方空间不够，翻到按钮下方
+          pTop = btnTop + BTN_SIZE + 12;
+          below = true;
+        }
+        panel.style.left = pLeft + 'px';
+        panel.style.top  = pTop + 'px';
+        panel.classList.toggle('below', below);
+      }
+
+      /* 等待 canvas 出现并监听其尺寸变化 */
+      function watchCanvas() {
+        var c = document.getElementById('live2dcanvas') ||
+                document.querySelector('.live2d canvas') ||
+                document.querySelector('canvas[width="300"]');
+        if (!c) return false;
+        canvasEl = c;
+        toggle.style.display = 'block';
+        positionWidgets();
+
+        if (window.ResizeObserver) {
+          new ResizeObserver(positionWidgets).observe(canvasEl);
+        }
+        return true;
+      }
+
+      var tries = 0;
+      var timer = setInterval(function () {
+        tries++;
+        if (watchCanvas() || tries > 40) clearInterval(timer); // 最多等 12 秒
+      }, 300);
+
+      window.addEventListener('resize', positionWidgets);
+      window.addEventListener('scroll', positionWidgets, { passive: true });
+
+      /* ===== 看板娘动作（防御性调用） ===== */
+      function playMotion(name) {
+        try {
+          var m = (window.L2Dwidget && (window.L2Dwidget.model || window.L2Dwidget._model)) ||
+                  window.live2dModel;
+          if (m && typeof m.motion === 'function') m.motion(name);
+        } catch (e) {}
+      }
+
+      /* ===== 交互 ===== */
+      toggle.addEventListener('click', function () {
         panel.classList.toggle('open');
-        if (panel.classList.contains('open')) input.focus();
+        if (panel.classList.contains('open')) {
+          positionWidgets(); // 打开时按实际高度重新定位
+          input.focus();
+          playMotion('tap_body');
+        }
       });
 
       function addMsg(role, text) {
-        const div = document.createElement('div');
+        var div = document.createElement('div');
         div.className = 'ai-msg ' + (role === 'user' ? 'user' : 'bot');
-        const span = document.createElement('span');
+        var span = document.createElement('span');
         span.textContent = text;
         div.appendChild(span);
         list.appendChild(div);
@@ -243,44 +335,50 @@ blog_live_time();
         return span;
       }
 
-      async function ask() {
-        const text = input.value.trim();
+      function ask() {
+        var text = input.value.trim();
         if (!text || send.disabled) return;
         input.value = '';
         addMsg('user', text);
         messages.push({ role: 'user', content: text });
 
         send.disabled = true;
-        const pending = addMsg('bot', '…');
+        var pending = addMsg('bot', '让我想想…');
         pending.classList.add('pending');
+        playMotion('shake');
 
-        try {
-          const res = await fetch(WORKER_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              model: MODEL,
-              messages: messages.slice(-8),
-            }),
-          });
-          const data = await res.json();
-          const reply =
-            (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) ||
-            '呜…我刚刚走神了，再说一遍好不好～';
+        fetch(WORKER_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: MODEL,
+            messages: messages.slice(-8)
+          })
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          var reply = (data.choices && data.choices[0] &&
+                       data.choices[0].message &&
+                       data.choices[0].message.content) ||
+                      '呜…我刚刚走神了，再说一遍好不好～';
           pending.textContent = reply;
           pending.classList.remove('pending');
           messages.push({ role: 'assistant', content: reply });
-        } catch (e) {
+          playMotion('tap_body');
+          positionWidgets(); // 消息变多后重新定位，避免面板超屏
+        })
+        .catch(function () {
           pending.textContent = '呜…好像连不上我的大脑，稍后再试试吧。';
           pending.classList.remove('pending');
-        } finally {
+        })
+        .then(function () {
           send.disabled = false;
           input.focus();
-        }
+        });
       }
 
       send.addEventListener('click', ask);
-      input.addEventListener('keydown', (e) => {
+      input.addEventListener('keydown', function (e) {
         if (e.key === 'Enter') ask();
       });
     })();
