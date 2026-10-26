@@ -103,7 +103,6 @@ IconifyProviders = {
 blog_live_time();
 </script></div></footer></div><a class="hty-icon-button" id="back-to-top" aria-label="back-to-top" href="#"><span class="icon iconify" data-icon="ri:arrow-up-s-line"></span><svg class="progress-circle-container" viewBox="0 0 100 100"><circle class="progress-circle" id="progressCircle" cx="50" cy="50" r="48" fill="none" stroke="#0078E7" stroke-width="2" stroke-linecap="round"></circle></svg></a><!-- hexo injector body_end start -->
   <style>
-    /* 按钮：镜像气泡，尖角在右下角 */
     #ai-waifu-toggle {
       position: fixed;
       left: 0;
@@ -129,14 +128,13 @@ blog_live_time();
       50%      { box-shadow: 0 6px 24px rgba(37, 99, 235, .75); }
     }
 
-    /* 聊天面板：高度固定，位置不再随消息数跳动 */
     #ai-waifu-panel {
       position: fixed;
       left: 0;
       top: 0;
       z-index: 99999;
       width: 300px;
-      height: min(380px, 60vh);   /* 固定高度：桌面 380px，小屏 60vh */
+      height: min(380px, 60vh);
       display: flex;
       flex-direction: column;
       background: rgba(255, 255, 255, .97);
@@ -156,9 +154,7 @@ blog_live_time();
       transform: scale(1);
       pointer-events: auto;
     }
-    #ai-waifu-panel.below {
-      transform-origin: top right;
-    }
+    #ai-waifu-panel.below { transform-origin: top right; }
 
     #ai-waifu-header {
       display: flex;
@@ -275,7 +271,21 @@ blog_live_time();
       var BTN_SIZE = 46;
       var PANEL_W = 300;
 
-      /* ===== 动态定位：按钮贴看板娘头部，面板在按钮正上方 ===== */
+      /* ===== 自动滚动 ===== */
+      var autoScroll = true;
+      list.addEventListener('scroll', function () {
+        // 距离底部 40px 内视为“在底部”
+        autoScroll = list.scrollHeight - list.scrollTop - list.clientHeight < 40;
+      });
+
+      function scrollToBottom(force) {
+        if (!force && !autoScroll) return;
+        requestAnimationFrame(function () {
+          list.scrollTop = list.scrollHeight;
+        });
+      }
+
+      /* ===== 动态定位 ===== */
       function positionWidgets() {
         if (!canvasEl) return;
         var r = canvasEl.getBoundingClientRect();
@@ -287,7 +297,6 @@ blog_live_time();
         toggle.style.left = btnLeft + 'px';
         toggle.style.top  = btnTop + 'px';
 
-        // 面板高度已固定，offsetHeight 稳定，不再随消息数变化
         var panelH = panel.offsetHeight || 380;
         var pLeft = btnLeft + BTN_SIZE - PANEL_W;
         var pTop  = btnTop - panelH - 12;
@@ -341,17 +350,18 @@ blog_live_time();
           positionWidgets();
           input.focus();
           playMotion('tap_body');
+          scrollToBottom(true);
         }
       });
 
-      function addMsg(role, text) {
+      function addMsg(role, text, force) {
         var div = document.createElement('div');
         div.className = 'ai-msg ' + (role === 'user' ? 'user' : 'bot');
         var span = document.createElement('span');
         span.textContent = text;
         div.appendChild(span);
         list.appendChild(div);
-        list.scrollTop = list.scrollHeight;
+        scrollToBottom(force);
         return span;
       }
 
@@ -359,11 +369,11 @@ blog_live_time();
         var text = input.value.trim();
         if (!text || send.disabled) return;
         input.value = '';
-        addMsg('user', text);
+        addMsg('user', text, true);   // 自己发的消息强制滚到底
         messages.push({ role: 'user', content: text });
 
         send.disabled = true;
-        var pending = addMsg('bot', '让我想想…');
+        var pending = addMsg('bot', '让我想想…', true);
         pending.classList.add('pending');
         playMotion('shake');
 
@@ -384,12 +394,13 @@ blog_live_time();
           pending.textContent = reply;
           pending.classList.remove('pending');
           messages.push({ role: 'assistant', content: reply });
+          scrollToBottom(true);   // 回复后滚到底
           playMotion('tap_body');
-          // 不再调用 positionWidgets()，面板高度固定，位置不会变
         })
         .catch(function () {
           pending.textContent = '呜…好像连不上我的大脑，稍后再试试吧。';
           pending.classList.remove('pending');
+          scrollToBottom(true);
         })
         .then(function () {
           send.disabled = false;
