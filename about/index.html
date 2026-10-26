@@ -110,7 +110,7 @@ autoplay="true">
 blog_live_time();
 </script></div></footer></div><a class="hty-icon-button" id="back-to-top" aria-label="back-to-top" href="#"><span class="icon iconify" data-icon="ri:arrow-up-s-line"></span><svg class="progress-circle-container" viewBox="0 0 100 100"><circle class="progress-circle" id="progressCircle" cx="50" cy="50" r="48" fill="none" stroke="#0078E7" stroke-width="2" stroke-linecap="round"></circle></svg></a><!-- hexo injector body_end start -->
   <style>
-    /* 按钮：初始给兜底位置，JS 会按 canvas 实际位置覆盖 */
+    /* 按钮：镜像气泡，尖角在右下角 */
     #ai-waifu-toggle {
       position: fixed;
       left: 0;
@@ -118,24 +118,25 @@ blog_live_time();
       z-index: 99999;
       width: 46px;
       height: 46px;
-      border-radius: 50% 50% 50% 4px;
+      border-radius: 50% 50% 4px 50%; /* 右下角尖 */
       border: none;
       background: linear-gradient(135deg, #7dd3fc, #2563eb);
       color: #fff;
       font-size: 20px;
+      line-height: 1;
       cursor: pointer;
       box-shadow: 0 4px 14px rgba(37, 99, 235, .4);
       animation: ai-breathe 2.8s ease-in-out infinite;
       transition: transform .2s ease, left .15s ease, top .15s ease;
-      display: none; /* 等 canvas 就绪后再显示 */
+      display: none;
     }
-    #ai-waifu-toggle:hover { transform: scale(1.12) rotate(-4deg); }
+    #ai-waifu-toggle:hover { transform: scale(1.12) rotate(4deg); }
     @keyframes ai-breathe {
       0%, 100% { box-shadow: 0 4px 14px rgba(37, 99, 235, .4); }
       50%      { box-shadow: 0 6px 24px rgba(37, 99, 235, .75); }
     }
 
-    /* 聊天面板：位置由 JS 计算，默认在按钮左上方 */
+    /* 聊天面板：从按钮向右展开 */
     #ai-waifu-panel {
       position: fixed;
       left: 0;
@@ -153,7 +154,7 @@ blog_live_time();
       font-size: 14px;
       opacity: 0;
       transform: scale(.94);
-      transform-origin: bottom right;
+      transform-origin: bottom left; /* 从左下角长出 */
       pointer-events: none;
       transition: opacity .24s ease, transform .24s cubic-bezier(.2, .9, .3, 1.2);
     }
@@ -162,20 +163,20 @@ blog_live_time();
       transform: scale(1);
       pointer-events: auto;
     }
-    /* 尾巴：指向按钮 */
+    /* 尾巴：面板左侧，指向按钮 */
     #ai-waifu-panel::after {
       content: '';
       position: absolute;
-      right: -8px;
+      left: -8px;
       bottom: 18px;
       width: 18px;
       height: 18px;
       background: rgba(255, 255, 255, .97);
       transform: rotate(45deg);
-      box-shadow: 4px -4px 10px rgba(0, 0, 0, .05);
+      box-shadow: -4px -4px 10px rgba(0, 0, 0, .05);
       border-radius: 3px;
     }
-    /* 面板翻到按钮下方时，尾巴翻到顶部 */
+    /* 面板翻到按钮下方时，尾巴翻到顶部左侧 */
     #ai-waifu-panel.below::after {
       bottom: auto;
       top: -8px;
@@ -265,7 +266,7 @@ blog_live_time();
     #ai-waifu-send:disabled { background: #94a3b8; cursor: not-allowed; }
   </style>
 
-  <button id="ai-waifu-toggle" title="和小灵聊聊天">🐾</button>
+  <button id="ai-waifu-toggle" title="和小灵聊聊天">💬</button>
   <div id="ai-waifu-panel">
     <div id="ai-waifu-header">
       <span class="dot"></span> 小灵 · 在线
@@ -296,32 +297,40 @@ blog_live_time();
       var PANEL_W = 300;
       var PANEL_MAX_H = 380;
 
-      /* ===== 动态定位核心：按钮贴着看板娘头部 ===== */
+      /* ===== 动态定位：按钮贴看板娘头部，面板向右展开 ===== */
       function positionWidgets() {
         if (!canvasEl) return;
         var r = canvasEl.getBoundingClientRect();
         if (!r.width || r.bottom < 0) return;
 
-        // 按钮：右边缘压住 canvas 左边缘 8px，垂直在 canvas 顶部往下 30px
+        // 按钮位置（保留你调好的参数）
         var btnLeft = r.left - BTN_SIZE + 60;
         var btnTop  = r.top + 60;
         if (btnLeft < 8) btnLeft = 8;
         toggle.style.left = btnLeft + 'px';
         toggle.style.top  = btnTop + 'px';
 
-        // 面板：右下角对准按钮，默认在按钮左上方；空间不够则翻到下方
+        // 面板：左下角对准按钮，向右展开；右侧空间不够则翻到左侧
         var panelH = panel.offsetHeight || PANEL_MAX_H;
-        var pLeft = btnLeft + BTN_SIZE - PANEL_W;
-        var pTop  = btnTop - panelH - 12;
-        var below = false;
-        if (pLeft < 8) pLeft = 8;
-        if (pTop < 8) {
-          pTop = btnTop + BTN_SIZE + 12;
-          below = true;
+        var pLeft = btnLeft;                          // 面板左边与按钮左边对齐
+        var pTop  = btnTop - panelH + BTN_SIZE;       // 面板底部与按钮底部对齐
+        var flipRight = false;
+
+        if (pLeft + PANEL_W > window.innerWidth - 8) {
+          // 右边放不下，翻到按钮左侧
+          pLeft = btnLeft + BTN_SIZE - PANEL_W;
+          flipRight = true;
         }
+        if (pTop < 8) {
+          // 上方空间不够，面板翻到按钮下方
+          pTop = btnTop + BTN_SIZE + 12;
+        }
+
         panel.style.left = pLeft + 'px';
         panel.style.top  = pTop + 'px';
-        panel.classList.toggle('below', below);
+        // 翻到左侧时，把尾巴也翻到右侧，保持指向按钮
+        panel.classList.toggle('below', pTop > btnTop);
+        panel.classList.toggle('flip', flipRight);
       }
 
       /* 等待 canvas 出现，并监听其尺寸变化 */
@@ -348,7 +357,7 @@ blog_live_time();
       window.addEventListener('resize', positionWidgets);
       window.addEventListener('scroll', positionWidgets, { passive: true });
 
-      /* ===== 看板娘动作（防御性调用，失败不影响聊天） ===== */
+      /* ===== 看板娘动作（防御性调用） ===== */
       function playMotion(name) {
         try {
           var m = (window.L2Dwidget && (window.L2Dwidget.model || window.L2Dwidget._model)) ||
