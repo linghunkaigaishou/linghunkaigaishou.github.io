@@ -118,7 +118,7 @@ blog_live_time();
       z-index: 99999;
       width: 46px;
       height: 46px;
-      border-radius: 50% 50% 4px 50%; /* 右下角尖 */
+      border-radius: 50% 50% 4px 50%;
       border: none;
       background: linear-gradient(135deg, #7dd3fc, #2563eb);
       color: #fff;
@@ -136,7 +136,7 @@ blog_live_time();
       50%      { box-shadow: 0 6px 24px rgba(37, 99, 235, .75); }
     }
 
-    /* 聊天面板：从按钮向右展开 */
+    /* 聊天面板：默认在按钮正上方，无三角 */
     #ai-waifu-panel {
       position: fixed;
       left: 0;
@@ -150,11 +150,11 @@ blog_live_time();
       backdrop-filter: blur(8px);
       border-radius: 16px;
       box-shadow: 0 14px 36px rgba(0, 0, 0, .2);
-      overflow: visible;
+      overflow: hidden;
       font-size: 14px;
       opacity: 0;
       transform: scale(.94);
-      transform-origin: bottom left; /* 从左下角长出 */
+      transform-origin: bottom right;
       pointer-events: none;
       transition: opacity .24s ease, transform .24s cubic-bezier(.2, .9, .3, 1.2);
     }
@@ -163,24 +163,9 @@ blog_live_time();
       transform: scale(1);
       pointer-events: auto;
     }
-    /* 尾巴：面板左侧，指向按钮 */
-    #ai-waifu-panel::after {
-      content: '';
-      position: absolute;
-      left: -8px;
-      bottom: 18px;
-      width: 18px;
-      height: 18px;
-      background: rgba(255, 255, 255, .97);
-      transform: rotate(45deg);
-      box-shadow: -4px -4px 10px rgba(0, 0, 0, .05);
-      border-radius: 3px;
-    }
-    /* 面板翻到按钮下方时，尾巴翻到顶部左侧 */
-    #ai-waifu-panel.below::after {
-      bottom: auto;
-      top: -8px;
-      box-shadow: -4px 4px 10px rgba(0, 0, 0, .05);
+    /* 面板翻到按钮下方时，长出方向改为顶部 */
+    #ai-waifu-panel.below {
+      transform-origin: top right;
     }
 
     #ai-waifu-header {
@@ -297,7 +282,7 @@ blog_live_time();
       var PANEL_W = 300;
       var PANEL_MAX_H = 380;
 
-      /* ===== 动态定位：按钮贴看板娘头部，面板向右展开 ===== */
+      /* ===== 动态定位：按钮贴看板娘头部，面板在按钮正上方 ===== */
       function positionWidgets() {
         if (!canvasEl) return;
         var r = canvasEl.getBoundingClientRect();
@@ -310,27 +295,23 @@ blog_live_time();
         toggle.style.left = btnLeft + 'px';
         toggle.style.top  = btnTop + 'px';
 
-        // 面板：左下角对准按钮，向右展开；右侧空间不够则翻到左侧
+        // 面板：右边缘与按钮右边缘对齐，放在按钮正上方
         var panelH = panel.offsetHeight || PANEL_MAX_H;
-        var pLeft = btnLeft;                          // 面板左边与按钮左边对齐
-        var pTop  = btnTop - panelH + BTN_SIZE;       // 面板底部与按钮底部对齐
-        var flipRight = false;
+        var pLeft = btnLeft + BTN_SIZE - PANEL_W;   // 右对齐按钮
+        var pTop  = btnTop - panelH - 12;           // 按钮上方留 12px 间隙
+        var below = false;
 
-        if (pLeft + PANEL_W > window.innerWidth - 8) {
-          // 右边放不下，翻到按钮左侧
-          pLeft = btnLeft + BTN_SIZE - PANEL_W;
-          flipRight = true;
-        }
+        // 左边超出屏幕，右移
+        if (pLeft < 8) pLeft = 8;
+        // 上方空间不够，翻到按钮下方
         if (pTop < 8) {
-          // 上方空间不够，面板翻到按钮下方
           pTop = btnTop + BTN_SIZE + 12;
+          below = true;
         }
 
         panel.style.left = pLeft + 'px';
         panel.style.top  = pTop + 'px';
-        // 翻到左侧时，把尾巴也翻到右侧，保持指向按钮
-        panel.classList.toggle('below', pTop > btnTop);
-        panel.classList.toggle('flip', flipRight);
+        panel.classList.toggle('below', below);
       }
 
       /* 等待 canvas 出现，并监听其尺寸变化 */
