@@ -574,7 +574,7 @@ blog_live_time();
     #ai-waifu-send:disabled { background: #94a3b8; cursor: not-allowed; }
   </style>
 
-  <button id="ai-waifu-toggle" title="和看板娘聊天">💬</button>
+  <button id="ai-waifu-toggle" title="和小灵聊天">💬</button>
   <div id="ai-waifu-panel">
     <div id="ai-waifu-header">
       <span class="dot"></span> 看板娘小灵 · 在线
@@ -591,7 +591,7 @@ blog_live_time();
       var WORKER_URL = 'https://my-blog-ai-proxy.927793613.workers.dev/v1/chat/completions';
       var MODEL = 'glm-4-flash';
       var messages = [
-        { role: 'system', content: '你是博客的看板娘 wanko，回答要简短、可爱、像朋友一样聊天。' }
+        { role: 'system', content: '你是博客的看板娘 小灵，回答要简短、可爱、像朋友一样聊天。' }
       ];
 
       var toggle = document.getElementById('ai-waifu-toggle');
