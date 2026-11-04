@@ -284,6 +284,52 @@ canvas{display:block;width:100%}
 .foot-l{max-width:760px;min-width:0}
 .foot-l b{color:#79839a;font-weight:700}
 
+/* ---------- 中奖规则 ---------- */
+.prize-tbl td{white-space:normal}
+.prize-tbl .lv{display:inline-flex;align-items:center;gap:8px;font-weight:750;font-variant-numeric:tabular-nums}
+.prize-tbl .lv i{width:23px;height:23px;border-radius:7px;display:grid;place-items:center;
+  font-size:11.5px;font-weight:800;font-style:normal;background:#f2f4f9;color:#5b6577;flex-shrink:0}
+.prize-tbl tr.top .lv i{background:linear-gradient(140deg,#f0425c,#a80f2a);color:#fff;
+  box-shadow:0 4px 10px -4px rgba(216,30,60,.7)}
+.prize-tbl tr.top .lv{color:#b01230}
+.prize-tbl .cond{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
+.prize-tbl .cond em{font-style:normal;display:inline-flex;align-items:center;gap:3px;
+  font-variant-numeric:tabular-nums;font-size:12.5px;color:#3d4657;white-space:nowrap}
+.bball{width:19px;height:19px;border-radius:50%;display:inline-grid;place-items:center;
+  font-size:10.5px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums;flex-shrink:0}
+.bball.r{background:linear-gradient(140deg,#f0425c,#c3152f)}
+.bball.b{background:linear-gradient(140deg,#4b83f0,#1a49b8)}
+.bball.o{background:linear-gradient(140deg,#9aa3b4,#6b7488)}
+.plus{color:#a9b2c3;font-weight:700;font-size:11px;margin:0 1px}
+.prize-tbl .money{font-weight:750;font-variant-numeric:tabular-nums;white-space:nowrap}
+.prize-tbl .money.f{color:#b01230}
+.prize-tbl .money.x{color:#8a6a1f}
+.prize-tbl .money small{font-size:11px;font-weight:600;color:#79839a;margin-left:3px}
+.prize-tbl .odds{font-variant-numeric:tabular-nums;color:#3d4657;font-weight:600;white-space:nowrap}
+.prize-tbl .odds small{display:block;font-size:11px;color:#9aa3b4;font-weight:600;margin-top:2px}
+.prize-tbl .cnum{font-variant-numeric:tabular-nums;color:#79839a;font-size:12.5px}
+.rules-list{margin:0;padding:0;list-style:none;font-size:12.5px;color:#3d4657;line-height:1.85}
+.rules-list li{position:relative;padding-left:17px;margin-bottom:10px}
+.rules-list li:last-child{margin-bottom:0}
+.rules-list li::before{content:"";position:absolute;left:2px;top:8px;width:5px;height:5px;
+  border-radius:50%;background:#d81e3c;opacity:.5}
+.rules-list b{color:#151922;font-weight:700}
+.calc{font-size:12.5px;color:#3d4657;line-height:1.9}
+.calc div{display:flex;justify-content:space-between;gap:14px;padding:7px 0;border-bottom:1px dashed var(--line)}
+.calc div:last-of-type{border-bottom:0}
+.calc span{color:#79839a}
+.calc b{font-variant-numeric:tabular-nums;color:#151922;font-weight:700;text-align:right}
+.calc .hl b{color:#b01230}
+.extremes{display:flex;flex-direction:column;gap:0;font-size:12.5px}
+.extremes .ex{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.extremes .ex:last-child{border-bottom:0}
+.extremes .ex i{font-style:normal;font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px;
+  background:#fdecef;color:#b01230;flex-shrink:0}
+.extremes .ex i.low{background:#e9f0ff;color:#1a49b8}
+.extremes .ex .cd{font-variant-numeric:tabular-nums;color:#5b6577;font-weight:600}
+.extremes .ex .dt{color:#9aa3b4;font-size:11.5px}
+.extremes .ex b{margin-left:auto;font-variant-numeric:tabular-nums;color:#151922;font-weight:750}
+
 /* ---------- 页脚访客统计 ---------- */
 .visit{display:inline-flex;align-items:center;gap:10px;flex-shrink:0;
   border:1px solid rgba(20,25,34,.09);background:#fff;border-radius:14px;padding:9px 14px;
@@ -344,6 +390,9 @@ canvas{display:block;width:100%}
       </button>
       <button data-view="predict">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/><circle cx="12" cy="12" r="3.6"/></svg>下期预测
+      </button>
+      <button data-view="rules">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M8 4h9a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M9 9h6M9 13h6M9 17h3"/></svg>中奖规则
       </button>
     </nav>
     <div class="meta">
@@ -629,6 +678,119 @@ canvas{display:block;width:100%}
     </div>
   </section>
 
+  <!-- ============ 中奖规则 ============ -->
+  <section id="view-rules" class="hidden">
+    <div class="sec">
+      <div class="kpis" id="ruleKpis"></div>
+    </div>
+
+    <div class="sec">
+      <div class="card pad">
+        <div class="sec-hd"><h2>奖级与奖金</h2><span>红球命中个数 + 蓝球是否命中，共同决定奖级</span></div>
+        <div class="tbl-wrap">
+          <table class="prize-tbl">
+            <thead>
+              <tr>
+                <th style="width:104px">奖级</th>
+                <th>中奖条件</th>
+                <th style="width:190px">单注奖金</th>
+                <th style="width:150px">中奖概率</th>
+                <th style="width:120px">组合数</th>
+              </tr>
+            </thead>
+            <tbody id="ruleRows"></tbody>
+          </table>
+        </div>
+        <div class="legend" style="margin-top:13px">
+          <span><i style="background:#d81e3c"></i>红色为浮动奖（每期金额不同）</span>
+          <span><i style="background:#c1922f"></i>金色为固定奖（全国统一，不随期次变化）</span>
+          <span>组合数与概率按全部 17,721,088 种号码组合精确计算</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="grid2">
+        <div class="card pad">
+          <div class="sec-hd"><h2>奖金是怎么定的</h2><span>浮动奖 vs 固定奖</span></div>
+          <ul class="rules-list">
+            <li><b>固定奖（三～六等奖）</b>：全国统一，中多少就是多少 —— 三等奖 3,000 元、四等奖 200 元、五等奖 10 元、六等奖 5 元，与当期销量、中奖注数无关。</li>
+            <li><b>浮动奖（一、二等奖）</b>：每期从销售额中按固定比例提取当期奖金，先扣掉三～六等奖的固定奖金，剩下的（加上滚存的奖池）由当期一、二等奖的中奖注数均分。<b>所以同一奖级在不同期次可以差很多</b> —— 中的人少，单注就高。</li>
+            <li><b>奖池滚存</b>：当期一等奖如果没人中，这笔钱滚入下一期奖池，这就是偶尔能看到"奖池 20 亿"的原因。</li>
+            <li><b>封顶与派奖</b>：一等奖单注最高限额封顶 500 万元；如果赶上全国派奖活动，单注可以突破封顶（历史最高出现过 1,500 万元）。</li>
+            <li><b>返奖率</b>：按游戏规则，销售额的 50% 用于返奖，其余进入公益金和发行费用。也就是说长期来看，每投入 2 元的期望回报约 1 元。</li>
+          </ul>
+        </div>
+
+        <div class="card pad">
+          <div class="sec-hd"><h2>概率是怎么算出来的</h2><span>纯组合数学，与选号方式无关</span></div>
+          <div class="calc" id="ruleCalc"></div>
+          <div class="note" style="margin-top:14px">
+            <b>要点：</b>自选、机选、生日号、走势图选号，一等奖概率完全相同 —— 每一注都是 1 / 17,721,088。
+            历史开奖之间相互独立，过去出过什么号码，不会影响下一期。
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="card pad">
+        <div class="sec-hd"><h2>历史上的一等奖单注奖金</h2><span id="prizeHint">近 60 期 · 单位：万元</span></div>
+        <div class="chart-box"><canvas id="cvPrize" style="height:235px"></canvas></div>
+        <div class="grid2" style="margin-top:18px;gap:18px">
+          <div class="kpis" id="prizeKpis" style="grid-template-columns:1fr 1fr"></div>
+          <div class="extremes" id="prizeExtremes"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-hd"><h2>兑奖须知</h2><span>中奖之后怎么办</span></div>
+      <div class="grid2">
+        <div class="card pad">
+          <div class="sec-hd"><h2>兑奖期限</h2><span>60 个自然日</span></div>
+          <ul class="rules-list">
+            <li>自<b>开奖之日</b>起 <b>60 个自然日</b>内兑奖，最后一天遇法定节假日顺延。</li>
+            <li>逾期未兑奖视为<b>弃奖</b>，奖金纳入彩票公益金，且无法追溯补发。</li>
+            <li>建议中奖后在手机上设个提醒，别把彩票夹在书里忘了。</li>
+          </ul>
+        </div>
+        <div class="card pad">
+          <div class="sec-hd"><h2>去哪兑、怎么兑</h2><span>按金额分档</span></div>
+          <ul class="rules-list">
+            <li><b>单张 1 万元以下</b>：省内任意福彩投注站即可兑付，现场领取。</li>
+            <li><b>单张 1 万元（含）以上</b>：需到当地福彩中心指定的兑奖地点办理，带身份证和中奖彩票。</li>
+            <li>彩票是<b>唯一兑奖凭证</b>，不记名、不挂失。玷污、破损导致无法识别的，可能无法兑付。</li>
+          </ul>
+        </div>
+        <div class="card pad">
+          <div class="sec-hd"><h2>个人所得税</h2><span>偶然所得 · 20%</span></div>
+          <ul class="rules-list">
+            <li>同一人、同一期、同一游戏的全部中奖金额<b>合计不超过 1 万元</b>的，免征个人所得税。</li>
+            <li><b>超过 1 万元</b>的，按合计金额全额 20% 缴纳个人所得税，由兑奖机构<b>代扣代缴</b>，到手即为税后金额。</li>
+            <li>单次中奖 3,000 元以上需<b>实名登记</b>；中奖信息会被保密，不会对外公开你的身份。</li>
+          </ul>
+        </div>
+        <div class="card pad">
+          <div class="sec-hd"><h2>开奖与核对</h2><span>每周二、四、日</span></div>
+          <ul class="rules-list">
+            <li>每周<b>二、四、日 21:15</b> 开奖，当期销量截止到开奖前（一般为 20:00）。</li>
+            <li>本站会在开奖后自动尝试联网同步，也可以点右上角「在线更新」手动拉取。</li>
+            <li>最终结果<b>以中国福利彩票发行管理中心公布的官方开奖公告为准</b>，本站数据仅供查询参考。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="note warn">
+        <b>理性提示：</b>彩票是概率游戏，不是投资工具。每注 2 元、一等奖概率 1/17,721,088，
+        任何选号方法都无法提高这个概率。请把它当作花小钱买的一份娱乐，<b>量力而行，切勿沉迷</b>；
+        未满 18 周岁禁止购买彩票和兑奖。
+      </div>
+    </div>
+  </section>
+
   <div class="foot">
     <div class="foot-l">
       <div>数据来源：中国福利彩票发行管理中心 · 中国彩吧历史开奖库　|　共 <b id="footN">3521</b> 期，覆盖 2003-02-23 至 <span id="footDate">2026-10-29</span>　|　打开页面时自动尝试联网更新，也可点击右上角"在线更新"</div>
@@ -689,6 +851,8 @@ const yi = n => n ? (n / 1e8).toFixed(2) + " 亿" : "—";
 function renderMeta() {
   document.getElementById("allRangeBtn").textContent = `全部 ${N} 期`;
   document.getElementById("metaRange").textContent = `${DATA[0].c.slice(0, 4)}–${LAST.c.slice(0, 4)} · ${N} 期`;
+  const opt0 = document.querySelector('#pSample option[value="0"]');
+  if (opt0) opt0.textContent = `全部历史（${N} 期）`;
   document.getElementById("footN").textContent = N;
   document.getElementById("footDate").textContent = LAST.d;
 }
@@ -705,7 +869,11 @@ function showTip(html, x, y) {
 const hideTip = () => tip.style.opacity = 0;
 
 const charts = [];
-function reg(id, fn) { const cv = document.getElementById(id); charts.push({ cv, fn }); }
+function reg(id, fn) {
+  const cv = document.getElementById(id);
+  const i = charts.findIndex(c => c.cv === cv);
+  if (i >= 0) charts[i].fn = fn; else charts.push({ cv, fn });
+}
 function redrawAll() { charts.forEach(({ cv, fn }) => { if (cv.offsetParent) fn(); }); }
 
 function fit(cv) {
@@ -1458,7 +1626,7 @@ document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
   document.querySelectorAll(".tabs button").forEach(x => x.classList.remove("on"));
   b.classList.add("on");
   const v = b.dataset.view;
-  ["search", "stats", "predict"].forEach(k =>
+  ["search", "stats", "predict", "rules"].forEach(k =>
     document.getElementById("view-" + k).classList.toggle("hidden", k !== v));
   window.scrollTo({ top: 0, behavior: "smooth" });
   if (v === "stats") {
@@ -1466,6 +1634,7 @@ document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
     else requestAnimationFrame(redrawAll);
   }
   if (v === "predict" && !predInit) { predInit = true; doPredict(); }
+  if (v === "rules") { if (!rulesInit) renderRules(); else requestAnimationFrame(redrawAll); }
 });
 
 let rt;
@@ -1668,6 +1837,7 @@ function appendRecords(recs) {
 function afterDataChange() {
   renderMeta(); renderHero(); applySearch(); buildMatrix(30);
   if (typeof statsInit !== "undefined" && statsInit) { charts.length = 0; renderStats(); }
+  if (typeof rulesInit !== "undefined" && rulesInit) renderRules();
   if (typeof predInit !== "undefined" && predInit) renderPrediction(currentModel());
 }
 
@@ -1686,6 +1856,118 @@ async function onlineUpdate(auto) {
   setTimeout(() => { lab.textContent = "在线更新"; }, 8000);
 }
 document.getElementById("btnUpdate").onclick = () => onlineUpdate(false);
+
+/* ================= 中奖规则 ================= */
+const CNK = (n, k) => { let r = 1; for (let i = 1; i <= k; i++) r = r * (n - k + i) / i; return Math.round(r); };
+const COMB_TOTAL = CNK(33, 6) * 16;          // 17,721,088
+const pct = x => (x * 100).toFixed(2) + "%";
+const pctF = x => x >= 0.01 ? (x * 100).toFixed(2) + "%"
+  : x >= 0.0001 ? (x * 100).toFixed(4) + "%" : (x * 100).toFixed(6) + "%";
+const odds = p => {
+  const v = COMB_TOTAL / p;
+  return v >= 100 ? "1 / " + fmtInt(Math.round(v)) : "1 / " + v.toFixed(1);
+};
+
+/* 奖级定义：r = 命中红球数，b = 蓝球是否命中（1/0） */
+const PRIZE = [
+  { lv: 1, name: "一等奖", ways: [[6, 1]], cmb: CNK(6, 6) * CNK(27, 0) * 1, fixed: 0, note: "封顶 500 万" },
+  { lv: 2, name: "二等奖", ways: [[6, 0]], cmb: CNK(6, 6) * CNK(27, 0) * 15, fixed: 0 },
+  { lv: 3, name: "三等奖", ways: [[5, 1]], cmb: CNK(6, 5) * CNK(27, 1) * 1, fixed: 3000 },
+  { lv: 4, name: "四等奖", ways: [[5, 0], [4, 1]], cmb: CNK(6, 5) * CNK(27, 1) * 15 + CNK(6, 4) * CNK(27, 2) * 1, fixed: 200 },
+  { lv: 5, name: "五等奖", ways: [[4, 0], [3, 1]], cmb: CNK(6, 4) * CNK(27, 2) * 15 + CNK(6, 3) * CNK(27, 3) * 1, fixed: 10 },
+  { lv: 6, name: "六等奖", ways: [[2, 1], [1, 1], [0, 1]], cmb: CNK(6, 2) * CNK(27, 4) + CNK(6, 1) * CNK(27, 5) + CNK(6, 0) * CNK(27, 6), fixed: 5 }
+];
+
+let rulesInit = false;
+
+function renderRuleKpis() {
+  const winCmb = PRIZE.reduce((a, p) => a + p.cmb, 0);
+  const rate = winCmb / COMB_TOTAL;
+  const fixedExp = PRIZE.filter(p => p.fixed).reduce((a, p) => a + p.fixed * p.cmb, 0) / COMB_TOTAL;
+  document.getElementById("ruleKpis").innerHTML = [
+    { p: "单注投注金额", v: "2", u: "元", s: "全国统一售价" },
+    { p: "总中奖概率", v: pct(rate), u: "", s: `约 ${(1 / rate).toFixed(1)} 注中 1 注（任一等奖级）` },
+    { p: "一等奖概率", v: "1 / 17,721,088", u: "", s: "与选号方式完全无关" },
+    { p: "固定奖期望回报", v: fixedExp.toFixed(2), u: "元/注", s: `占 2 元投注额的 ${(fixedExp / 2 * 100).toFixed(1)}%，另有浮动奖` }
+  ].map(k => `<div class="kpi"><p>${k.p}</p><h3>${k.v}<small>${k.u}</small></h3><div class="sub">${k.s}</div></div>`).join("");
+}
+
+function renderRuleRows() {
+  const ball = (n, cls) => `<span class="bball ${cls}">${n}</span>`;
+  document.getElementById("ruleRows").innerHTML = PRIZE.map(p => {
+    const conds = p.ways.map(([r, b]) =>
+      `<em>${ball(r, r ? "r" : "o")}<span class="plus">+</span>${ball(b, b ? "b" : "o")}</em>`).join("");
+    const money = p.fixed
+      ? `<span class="money x">${fmtInt(p.fixed)} 元</span>`
+      : `<span class="money f">浮动奖${p.note ? `<small>${p.note}</small>` : ""}</span>`;
+    return `<tr class="${p.lv <= 2 ? "top" : ""}">
+      <td><span class="lv"><i>${p.lv}</i>${p.name}</span></td>
+      <td><div class="cond">${conds}</div></td>
+      <td>${money}</td>
+      <td><span class="odds">${odds(p.cmb)}<small>${pctF(p.cmb / COMB_TOTAL)}</small></span></td>
+      <td><span class="cnum">${fmtInt(p.cmb)}</span></td>
+    </tr>`;
+  }).join("");
+}
+
+function renderRuleCalc() {
+  const winCmb = PRIZE.reduce((a, p) => a + p.cmb, 0);
+  const fixedExp = PRIZE.filter(p => p.fixed).reduce((a, p) => a + p.fixed * p.cmb, 0) / COMB_TOTAL;
+  document.getElementById("ruleCalc").innerHTML = `
+    <div><span>红球组合数</span><b>C(33,6) = 1,107,568</b></div>
+    <div><span>蓝球选法</span><b>16</b></div>
+    <div><span>全部可能组合</span><b>1,107,568 × 16 = 17,721,088</b></div>
+    <div class="hl"><span>一等奖（6+1）</span><b>1 种 → ${odds(1)}</b></div>
+    <div><span>全部中奖组合</span><b>${fmtInt(winCmb)} 种</b></div>
+    <div><span>任一等奖级概率</span><b>${fmtInt(winCmb)} / 17,721,088 = ${pct(winCmb / COMB_TOTAL)}</b></div>
+    <div><span>固定奖期望回报</span><b>${fixedExp.toFixed(2)} 元 / 注（投 2 元）</b></div>`;
+}
+
+function renderPrizeHistory() {
+  const rows = DATA.filter(x => x.m1 > 0);
+  const last = rows.slice(-60);
+  const all = rows;
+  const hi = all.reduce((a, b) => b.m1 > a.m1 ? b : a);
+  const lo = all.reduce((a, b) => b.m1 < a.m1 ? b : a);
+  const avgAll = Math.round(all.reduce((a, b) => a + b.m1, 0) / all.length);
+  const avg60 = Math.round(last.reduce((a, b) => a + b.m1, 0) / last.length);
+  const n60 = Math.round(last.reduce((a, b) => a + b.n1, 0) / last.length);
+
+  document.getElementById("prizeKpis").innerHTML = [
+    { p: "历史最高单注", v: (hi.m1 / 1e4).toFixed(0), u: "万元", s: `${hi.c} 期 · ${hi.n1} 注中出` },
+    { p: "历史最低单注", v: (lo.m1 / 1e4).toFixed(0), u: "万元", s: `${lo.c} 期 · ${lo.n1} 注中出` },
+    { p: "平均单注（全部）", v: (avgAll / 1e4).toFixed(0), u: "万元", s: `${fmtInt(all.length)} 期有数据` },
+    { p: "平均单注（近 60 期）", v: (avg60 / 1e4).toFixed(0), u: "万元", s: `平均每期 ${n60} 注一等奖` }
+  ].map(k => `<div class="kpi"><p>${k.p}</p><h3>${k.v}<small>${k.u}</small></h3><div class="sub">${k.s}</div></div>`).join("");
+
+  const top = all.slice().sort((a, b) => b.m1 - a.m1).slice(0, 2);
+  const bot = all.slice().sort((a, b) => a.m1 - b.m1).slice(0, 2);
+  document.getElementById("prizeExtremes").innerHTML =
+    `<div style="font-size:11.5px;color:#79839a;font-weight:600;letter-spacing:.4px;padding-bottom:6px">极值记录 · 单注奖金</div>` +
+    top.map(x => `<div class="ex"><i>最高</i><span class="cd">${x.c}</span><span class="dt">${x.d}</span><b>${(x.m1 / 1e4).toFixed(0)} 万</b></div>`).join("") +
+    bot.map(x => `<div class="ex"><i class="low">最低</i><span class="cd">${x.c}</span><span class="dt">${x.d}</span><b>${(x.m1 / 1e4).toFixed(0)} 万</b></div>`).join("");
+
+  document.getElementById("prizeHint").textContent =
+    `近 ${last.length} 期 · 单位：万元 · 平均每期 ${n60} 注中出`;
+
+  reg("cvPrize", () => {
+    barChart(document.getElementById("cvPrize"),
+      last.map(x => ({ label: x.c.slice(2), code: x.c, value: x.m1 / 1e4, n1: x.n1, m1: x.m1 })),
+      {
+        color: "#d81e3c", labelsEvery: 6,
+        tip: d => `<b>${d.code} 期</b><br>一等奖 ${d.n1} 注 · 单注 ${fmtInt(d.m1)} 元`
+      });
+  });
+}
+
+function renderRules() {
+  rulesInit = true;
+  renderRuleKpis();
+  renderRuleRows();
+  renderRuleCalc();
+  renderPrizeHistory();
+  requestAnimationFrame(redrawAll);
+}
 
 /* 初始化 */
 appendRecords(loadExtra());   // 恢复浏览器里缓存的增量数据
