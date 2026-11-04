@@ -1,0 +1,63 @@
+/* 页脚访客信息条样式 */
+#footer #visitor-geo {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: .4rem;
+    margin: .1rem auto 0;
+    padding: 0;
+    font-size: .8rem;
+    line-height: 1.7;
+    color: var(--hty-secondary-text-color, #8a94a6);
+    text-align: center;
+  }
+  #footer #visitor-geo .vg-dot {
+    width: 5px; height: 5px; border-radius: 50%; flex: none;
+    background: #22c55e;
+    box-shadow: 0 0 0 2.5px rgba(34, 197, 94, .14);
+    animation: vg-pulse 2.8s ease-in-out infinite;
+  }
+  #footer #visitor-geo .vg-dot.warn {
+    background: #f59e0b;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, .16);
+    animation: none;
+  }
+  #footer #visitor-geo .vg-who {
+    display: inline-flex;
+    align-items: baseline;
+    white-space: nowrap;
+  }
+  #footer #visitor-geo .vg-label {
+    font-size: .95em;
+    letter-spacing: .2px;
+    color: inherit;
+    opacity: .8;
+  }
+  #footer #visitor-geo .vg-ip {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: .8rem;
+    letter-spacing: .2px;
+    color: var(--hty-text-color, #3c4043);
+    cursor: copy;
+    border-bottom: 1px dashed transparent;
+    transition: border-color .18s;
+  }
+  #footer #visitor-geo .vg-ip:hover { border-bottom-color: currentColor; }
+  #footer #visitor-geo .vg-ip.copied { color: #22c55e; }
+  #footer #visitor-geo .vg-sep { opacity: .45; }
+  #footer #visitor-geo .vg-loc {
+    max-width: 66vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  @media (max-width: 600px) {
+    #footer #visitor-geo { font-size: .76rem; gap: .35rem; }
+    #footer #visitor-geo .vg-loc { max-width: 52vw; }
+  }
+  @keyframes vg-pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: .35; }
+  }
