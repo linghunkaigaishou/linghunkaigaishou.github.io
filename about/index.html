@@ -140,8 +140,8 @@ blog_live_time();
       left: 0;
       top: 0;
       z-index: 99999;
-      width: 300px;
-      height: min(380px, 60vh);
+      width: min(340px, calc(100vw - 20px));
+      height: min(460px, 72vh);
       display: flex;
       flex-direction: column;
       background: rgba(255, 255, 255, .97);
@@ -181,6 +181,12 @@ blog_live_time();
       box-shadow: 0 0 8px #4ade80;
       animation: ai-dot 1.6s ease-in-out infinite;
     }
+    #ai-waifu-header .ctx {
+      margin-left: auto;
+      font-size: 11px;
+      font-weight: 400;
+      opacity: .85;
+    }
     @keyframes ai-dot {
       0%, 100% { opacity: 1; }
       50%      { opacity: .45; }
@@ -213,10 +219,60 @@ blog_live_time();
       color: #1e293b;
       border-bottom-left-radius: 4px;
     }
+    .ai-msg.bot span code {
+      background: rgba(15, 23, 42, .08);
+      padding: 1px 4px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .ai-msg.bot span a { color: #2563eb; text-decoration: underline; }
     .ai-msg.bot span.pending { color: #94a3b8; font-style: italic; }
+    .ai-src {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      align-items: flex-start;
+      margin: -6px 0 12px 4px;
+    }
+    .ai-src a {
+      font-size: 12px;
+      color: #2563eb;
+      text-decoration: none;
+      border-bottom: 1px dashed rgba(37, 99, 235, .5);
+      max-width: 88%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .ai-src a:hover { border-bottom-style: solid; }
     @keyframes ai-pop {
       from { opacity: 0; transform: translateY(5px) scale(.97); }
       to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    #ai-waifu-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 0 12px 10px;
+      background: #f8fafc;
+      flex-shrink: 0;
+    }
+    #ai-waifu-chips[hidden] { display: none; }
+    #ai-waifu-chips button {
+      border: 1px solid #cbd5e1;
+      background: #fff;
+      color: #475569;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    #ai-waifu-chips button:hover {
+      border-color: #2563eb;
+      color: #2563eb;
+      background: #eff6ff;
     }
 
     #ai-waifu-input-row {
@@ -248,12 +304,18 @@ blog_live_time();
     #ai-waifu-send:disabled { background: #94a3b8; cursor: not-allowed; }
   </style>
 
-  <button id="ai-waifu-toggle" title="和小灵灵聊聊天">💬</button>
+  <button id="ai-waifu-toggle" title="和小灵聊聊天">💬</button>
   <div id="ai-waifu-panel">
     <div id="ai-waifu-header">
       <span class="dot"></span> 小灵 · 在线
+      <span class="ctx" id="ai-waifu-ctx"></span>
     </div>
     <div id="ai-waifu-messages"></div>
+    <div id="ai-waifu-chips">
+      <button data-q="这篇文章讲了什么？">这篇讲什么</button>
+      <button data-q="站内都有哪些文章？">有哪些文章</button>
+      <button data-q="帮我找一下关于 Hexo 的文章">找文章</button>
+    </div>
     <div id="ai-waifu-input-row">
       <input id="ai-waifu-input" placeholder="和小灵说点什么…" />
       <button id="ai-waifu-send">发送</button>
@@ -262,34 +324,58 @@ blog_live_time();
 
   <script>
     (function () {
-      var WORKER_URL = 'https://www.linghunkaigaihou.cc.cd/v1/chat/completions';
-      var MODEL = 'glm-4-flash';
-      var messages = [
-        { role: 'system', content: '你是博客「灵魂开盖手」的看板娘，名字叫小灵，是一只聪明可爱的小狗。你的主人是博客的作者「灵魂开盖手」。当有人问起博客或你的主人时，要自豪地介绍。回答要简短、可爱、像朋友一样聊天。' }
-      ];
+      if (window.__aiWaifuLoaded) return;
+      window.__aiWaifuLoaded = true;
 
-      var toggle = document.getElementById('ai-waifu-toggle');
-      var panel = document.getElementById('ai-waifu-panel');
-      var list = document.getElementById('ai-waifu-messages');
-      var input = document.getElementById('ai-waifu-input');
-      var send = document.getElementById('ai-waifu-send');
+      var CFG = {"endpoint":"https://www.linghunkaigaihou.cc.cd/v1/chat/completions","model":"glm-4-flash","indexUrl":"/ai-index.json","site":"灵魂开盖手的小站","author":"灵魂开盖手","siteUrl":"https://linghunkaigaishou.github.io"};
+
+      var SYSTEM = [
+        '你是「' + CFG.site + '」的看板娘小灵，一只聪明可爱的白色小狗，主人是站长「' + CFG.author + '」。',
+        '说话活泼俏皮、简短自然，像朋友聊天，不要自称AI或语言模型。',
+        '',
+        '用户消息里会附带三类材料：【当前阅读页面】【站内检索结果】【站内文章目录】。',
+        '规则：',
+        '1. 凡是问到文章内容、写过什么、页面功能，必须以这些材料为准；材料里没有的就说「这个我这儿没查到」，禁止编造文章标题、链接或观点。',
+        '2. 提到站内文章时，直接用《文章标题》称呼，不要输出网址、不要写 Markdown 链接——界面会自动在回答下方补上正确链接。',
+        '3. 回答控制在 200 字以内。讲操作步骤时可以列简短编号；其他场合用自然段落。',
+        '4. 用户问「站内有哪些文章」时，用 [标题](链接) 列出最相关的 4 篇以内，链接照抄材料。',
+        '5. 与博客无关的通用问题（编程、常识）也正常回答，不必强行扯回博客。'
+      ].join('\n');
+
+      var $ = function (id) { return document.getElementById(id); };
+      var toggle = $('ai-waifu-toggle');
+      var panel = $('ai-waifu-panel');
+      var list = $('ai-waifu-messages');
+      var input = $('ai-waifu-input');
+      var send = $('ai-waifu-send');
+      var chips = $('ai-waifu-chips');
+      var ctxLabel = $('ai-waifu-ctx');
 
       var canvasEl = null;
       var BTN_SIZE = 46;
-      var PANEL_W = 300;
+      var busy = false;
+      var history = [];
+      var indexData = null;
+      var indexPromise = null;
+
+      try {
+        history = JSON.parse(sessionStorage.getItem('ai_waifu_hist') || '[]');
+        if (!Array.isArray(history)) history = [];
+      } catch (e) { history = []; }
+
+      function saveHist() {
+        try { sessionStorage.setItem('ai_waifu_hist', JSON.stringify(history.slice(-12))); } catch (e) {}
+      }
 
       /* ===== 自动滚动 ===== */
       var autoScroll = true;
       list.addEventListener('scroll', function () {
-        // 距离底部 40px 内视为“在底部”
         autoScroll = list.scrollHeight - list.scrollTop - list.clientHeight < 40;
       });
 
       function scrollToBottom(force) {
         if (!force && !autoScroll) return;
-        requestAnimationFrame(function () {
-          list.scrollTop = list.scrollHeight;
-        });
+        requestAnimationFrame(function () { list.scrollTop = list.scrollHeight; });
       }
 
       /* ===== 动态定位 ===== */
@@ -299,24 +385,22 @@ blog_live_time();
         if (!r.width || r.bottom < 0) return;
 
         var btnLeft = r.left - BTN_SIZE + 60;
-        var btnTop  = r.top + 60;
+        var btnTop = r.top + 60;
         if (btnLeft < 8) btnLeft = 8;
         toggle.style.left = btnLeft + 'px';
-        toggle.style.top  = btnTop + 'px';
+        toggle.style.top = btnTop + 'px';
 
-        var panelH = panel.offsetHeight || 380;
-        var pLeft = btnLeft + BTN_SIZE - PANEL_W;
-        var pTop  = btnTop - panelH - 12;
+        var panelW = panel.offsetWidth || 340;
+        var panelH = panel.offsetHeight || 460;
+        var pLeft = btnLeft + BTN_SIZE - panelW;
+        var pTop = btnTop - panelH - 12;
         var below = false;
 
         if (pLeft < 8) pLeft = 8;
-        if (pTop < 8) {
-          pTop = btnTop + BTN_SIZE + 12;
-          below = true;
-        }
+        if (pTop < 8) { pTop = btnTop + BTN_SIZE + 12; below = true; }
 
         panel.style.left = pLeft + 'px';
-        panel.style.top  = pTop + 'px';
+        panel.style.top = pTop + 'px';
         panel.classList.toggle('below', below);
       }
 
@@ -328,9 +412,7 @@ blog_live_time();
         canvasEl = c;
         toggle.style.display = 'block';
         positionWidgets();
-        if (window.ResizeObserver) {
-          new ResizeObserver(positionWidgets).observe(canvasEl);
-        }
+        if (window.ResizeObserver) new ResizeObserver(positionWidgets).observe(canvasEl);
         return true;
       }
 
@@ -351,6 +433,266 @@ blog_live_time();
         } catch (e) {}
       }
 
+      /* ===== 轻量 Markdown 渲染（安全：只用 textContent 建节点） ===== */
+      function appendInline(parent, text) {
+        var re = /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)\s]+\))/g;
+        var last = 0, m;
+        while ((m = re.exec(text))) {
+          if (m.index > last) parent.appendChild(document.createTextNode(text.slice(last, m.index)));
+          var tok = m[0];
+          if (tok.slice(0, 2) === '**') {
+            var b = document.createElement('strong');
+            b.textContent = tok.slice(2, -2);
+            parent.appendChild(b);
+          } else if (tok.charAt(0) === '`') {
+            var c = document.createElement('code');
+            c.textContent = tok.slice(1, -1);
+            parent.appendChild(c);
+          } else {
+            var mm = /^\[([^\]]+)\]\(([^)\s]+)\)$/.exec(tok);
+            var a = document.createElement('a');
+            a.textContent = mm[1];
+            var href = mm[2];
+            if (!/^(https?:)?\/\//i.test(href) && href.charAt(0) !== '/') href = '/' + href;
+            a.href = href;
+            a.target = '_blank';
+            a.rel = 'noopener';
+            parent.appendChild(a);
+          }
+          last = m.index + tok.length;
+        }
+        if (last < text.length) parent.appendChild(document.createTextNode(text.slice(last)));
+      }
+
+      function renderRich(span, text) {
+        span.textContent = '';
+        var lines = String(text).split('\n');
+        lines.forEach(function (line, i) {
+          if (i) span.appendChild(document.createElement('br'));
+          if (line) appendInline(span, line);
+        });
+      }
+
+      function addMsg(role, text, force) {
+        var div = document.createElement('div');
+        div.className = 'ai-msg ' + (role === 'user' ? 'user' : 'bot');
+        var span = document.createElement('span');
+        div.appendChild(span);
+        if (role === 'user') span.textContent = text; else renderRich(span, text);
+        list.appendChild(div);
+        scrollToBottom(force);
+        return span;
+      }
+
+      function addSources(items) {
+        if (!items || !items.length) return;
+        var box = document.createElement('div');
+        box.className = 'ai-src';
+        items.slice(0, 3).forEach(function (it) {
+          var a = document.createElement('a');
+          a.href = it.url;
+          a.target = '_blank';
+          a.rel = 'noopener';
+          a.textContent = (it.current ? '↗ 当前文章：' : '↗ ') + it.title;
+          a.title = it.excerpt || it.title;
+          box.appendChild(a);
+        });
+        list.appendChild(box);
+        scrollToBottom(true);
+      }
+
+      function buildSources(hits) {
+        var out = [];
+        var page = currentPage();
+        if (page) out.push({ title: page.title, url: page.url, current: true });
+        (hits || []).forEach(function (p) {
+          var u = abs(p);
+          var dup = out.some(function (x) { return x.url === u; });
+          if (!dup) out.push({ title: p.title, url: u, excerpt: p.excerpt });
+        });
+        return out;
+      }
+
+      /* ===== 站内索引与检索 ===== */      function loadIndex() {
+        if (indexPromise) return indexPromise;
+        indexPromise = fetch(CFG.indexUrl, { cache: 'no-cache' })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .catch(function () { return null; })
+          .then(function (d) {
+            indexData = d && Array.isArray(d.posts) ? d : null;
+            ctxLabel.textContent = indexData ? indexData.posts.length + ' 篇文章在库里' : '仅当前页';
+            return indexData;
+          });
+        return indexPromise;
+      }
+
+      function tokens(s) {
+        var out = [];
+        var low = String(s || '').toLowerCase();
+        var latin = low.match(/[a-z0-9][a-z0-9_+.#-]{1,}/g);
+        if (latin) out = out.concat(latin);
+        var han = low.replace(/[^\u4e00-\u9fa5]+/g, ' ');
+        han.split(/\s+/).forEach(function (seg) {
+          for (var i = 0; i < seg.length; i++) {
+            if (i + 1 < seg.length) out.push(seg.substr(i, 2));
+            if (i + 2 < seg.length) out.push(seg.substr(i, 3));
+          }
+        });
+        return out.filter(function (t, i, a) { return a.indexOf(t) === i; });
+      }
+
+      function search(q, topN) {
+        if (!indexData) return [];
+        var ts = tokens(q);
+        if (!ts.length) return [];
+        var scored = indexData.posts.map(function (p) {
+          var title = (p.title || '').toLowerCase();
+          var tags = (p.tags || []).join(' ').toLowerCase();
+          var body = (p.text || '').toLowerCase();
+          var score = 0;
+          ts.forEach(function (t) {
+            if (title.indexOf(t) >= 0) score += 8;
+            if (tags.indexOf(t) >= 0) score += 5;
+            var idx = body.indexOf(t);
+            var hits = 0;
+            while (idx >= 0 && hits < 20) { hits++; idx = body.indexOf(t, idx + t.length); }
+            score += hits;
+          });
+          return { post: p, score: score };
+        }).filter(function (x) { return x.score > 0; });
+
+        scored.sort(function (a, b) { return b.score - a.score; });
+        var listAsk = /(有哪|哪些|都有什么|列表|目录|推荐|写过|盘点|多少篇)/.test(q);
+        if (!scored.length) {
+          return listAsk ? indexData.posts.slice(0, topN || 3) : [];
+        }
+        var top = scored[0].score;
+        var kept = listAsk ? scored : scored.filter(function (x) { return x.score >= Math.max(3, top * 0.25); });
+        return kept.slice(0, topN || 3).map(function (x) { return x.post; });
+      }
+
+      function currentPage() {
+        var el = document.querySelector('.post-body .post-content') ||
+                 document.querySelector('.post-content');
+        if (!el) return null;
+        var titleEl = document.querySelector('.post-title') || document.querySelector('h1');
+        var text = (el.innerText || '').replace(/\n{3,}/g, '\n\n').trim();
+        if (text.length < 40) return null;
+        return {
+          title: (titleEl ? titleEl.textContent : document.title).trim(),
+          url: location.href,
+          text: text.slice(0, 3000)
+        };
+      }
+
+      function abs(p) {
+        var u = p.url || '';
+        if (/^https?:/i.test(u)) return u;
+        return CFG.siteUrl.replace(/\/$/, '') + '/' + String(u).replace(/^\//, '');
+      }
+
+      function compose(question) {
+        var parts = [];
+        var page = currentPage();
+        if (page) {
+          parts.push('=== 当前阅读页面 ===\n标题：' + page.title + '\n链接：' + page.url +
+                     '\n正文（过长会截断）：\n' + page.text);
+        } else {
+          parts.push('=== 当前阅读页面 ===\n（用户不在文章页，可能停在首页、归档页或工具页；这种情况不要引用任何当前页链接。）');
+        }
+
+        var hits = search(question, 3);
+        if (hits.length) {
+          parts.push('=== 站内检索结果（按相关度排序） ===\n' + hits.map(function (p, i) {
+            return (i + 1) + '. ' + p.title + '（' + p.date + '）\n链接：' + abs(p) +
+                   '\n摘要：' + (p.text || '').replace(/\s+/g, ' ').slice(0, 700);
+          }).join('\n\n'));
+        }
+
+        if (indexData) {
+          var all = indexData.posts;
+          var listing = all.length > 40 ? all.slice(0, 40) : all;
+          parts.push('=== 站内文章目录（共 ' + all.length + ' 篇） ===\n' + listing.map(function (p) {
+            var tagStr = (p.tags && p.tags.length) ? '　标签：' + p.tags.join('/') : '';
+            return '- ' + p.title + '｜' + p.date + '｜' + abs(p) + tagStr;
+          }).join('\n'));
+        }
+
+        parts.push('=== 用户提问 ===\n' + question);
+        return parts.join('\n\n');
+      }
+
+      function buildMessages(question) {
+        var msgs = [{ role: 'system', content: SYSTEM }];
+        history.slice(0, -1).slice(-6).forEach(function (m) { msgs.push(m); });
+        msgs.push({ role: 'user', content: compose(question) });
+        return msgs;
+      }
+
+      /* ===== 发送 ===== */
+      function ask() {
+        var q = input.value.trim();
+        if (!q || busy) return;
+        input.value = '';
+        chips.hidden = true;
+
+        addMsg('user', q, true);
+        history.push({ role: 'user', content: q });
+        saveHist();
+
+        busy = true;
+        send.disabled = true;
+        var pending = addMsg('bot', '小灵正在翻你的博客…', true);
+        pending.classList.add('pending');
+        playMotion('shake');
+
+        var ctrl = window.AbortController ? new AbortController() : null;
+        var to = setTimeout(function () { if (ctrl) ctrl.abort(); }, 45000);
+        var hits = [];
+
+        loadIndex()
+          .then(function () {
+            hits = search(q, 3);
+            return fetch(CFG.endpoint, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ model: CFG.model, messages: buildMessages(q) }),
+              signal: ctrl ? ctrl.signal : undefined
+            });
+          })
+          .then(function (res) {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.json();
+          })
+          .then(function (data) {
+            if (data && data.error) throw new Error(data.error.message || 'upstream error');
+            var reply = (data.choices && data.choices[0] && data.choices[0].message &&
+                         data.choices[0].message.content) || '';
+            if (!reply) throw new Error('empty reply');
+            pending.classList.remove('pending');
+            renderRich(pending, reply);
+            addSources(buildSources(hits));
+            history.push({ role: 'assistant', content: reply });
+            saveHist();
+            scrollToBottom(true);
+            playMotion('tap_body');
+          })
+          .catch(function (err) {
+            pending.classList.remove('pending');
+            pending.textContent = String(err && err.name) === 'AbortError'
+              ? '呜…想太久了，网络卡住了，再问一次好不好～'
+              : '呜…好像连不上我的大脑了（' + (err && err.message ? err.message : '未知错误') + '）。';
+            scrollToBottom(true);
+          })
+          .then(function () {
+            clearTimeout(to);
+            busy = false;
+            send.disabled = false;
+            input.focus();
+          });
+      }
+
+      /* ===== 交互 ===== */
       toggle.addEventListener('click', function () {
         panel.classList.toggle('open');
         if (panel.classList.contains('open')) {
@@ -358,66 +700,32 @@ blog_live_time();
           input.focus();
           playMotion('tap_body');
           scrollToBottom(true);
+          loadIndex();
+          if (!history.length) {
+            addMsg('bot', '汪！我是小灵～ 想了解当前这篇文章，或者找找站里写过什么，都可以问我。', true);
+          }
         }
       });
 
-      function addMsg(role, text, force) {
-        var div = document.createElement('div');
-        div.className = 'ai-msg ' + (role === 'user' ? 'user' : 'bot');
-        var span = document.createElement('span');
-        span.textContent = text;
-        div.appendChild(span);
-        list.appendChild(div);
-        scrollToBottom(force);
-        return span;
-      }
-
-      function ask() {
-        var text = input.value.trim();
-        if (!text || send.disabled) return;
-        input.value = '';
-        addMsg('user', text, true);   // 自己发的消息强制滚到底
-        messages.push({ role: 'user', content: text });
-
-        send.disabled = true;
-        var pending = addMsg('bot', '让我想想…', true);
-        pending.classList.add('pending');
-        playMotion('shake');
-
-        fetch(WORKER_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: MODEL,
-            messages: messages.slice(-8)
-          })
-        })
-        .then(function (res) { return res.json(); })
-        .then(function (data) {
-          var reply = (data.choices && data.choices[0] &&
-                       data.choices[0].message &&
-                       data.choices[0].message.content) ||
-                      '呜…我刚刚走神了，再说一遍好不好～';
-          pending.textContent = reply;
-          pending.classList.remove('pending');
-          messages.push({ role: 'assistant', content: reply });
-          scrollToBottom(true);   // 回复后滚到底
-          playMotion('tap_body');
-        })
-        .catch(function () {
-          pending.textContent = '呜…好像连不上我的大脑，稍后再试试吧。';
-          pending.classList.remove('pending');
-          scrollToBottom(true);
-        })
-        .then(function () {
-          send.disabled = false;
-          input.focus();
-        });
-      }
+      chips.addEventListener('click', function (e) {
+        var b = e.target.closest ? e.target.closest('button[data-q]') : null;
+        if (!b) return;
+        input.value = b.getAttribute('data-q');
+        ask();
+      });
 
       send.addEventListener('click', ask);
       input.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') ask();
+        if (e.key !== 'Enter') return;
+        if (e.isComposing || e.keyCode === 229) return;
+        e.preventDefault();
+        ask();
       });
+
+      if (history.length) {
+        history.forEach(function (m) {
+          addMsg(m.role === 'user' ? 'user' : 'bot', m.content, false);
+        });
+      }
     })();
   </script><!-- hexo injector body_end end --><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"scale":1,"hHeadPos":0.5,"vHeadPos":0.618,"jsonPath":"/live2dw/assets/wanko.model.json"},"display":{"superSample":2,"width":150,"height":300,"position":"right","hOffset":0,"vOffset":-20},"mobile":{"show":true,"scale":0.5},"react":{"opacityDefault":0.7,"opacityOnHover":0.2},"log":false});</script></body></html>
