@@ -737,24 +737,12 @@ blog_live_time();
     justify-content: center;
     flex-wrap: wrap;
     gap: .4rem;
-    margin: .6rem auto 0;
-    padding-top: .55rem;
-    font-size: .78rem;
+    margin: .1rem auto 0;
+    padding: 0;
+    font-size: .8rem;
     line-height: 1.7;
     color: var(--hty-secondary-text-color, #8a94a6);
     text-align: center;
-  }
-  /* 上方短横线，把这条「访客侧信息」与博客自身信息分隔开 */
-  #footer #visitor-geo::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 34px;
-    height: 1px;
-    background: currentColor;
-    opacity: .25;
   }
   #footer #visitor-geo .vg-dot {
     width: 5px; height: 5px; border-radius: 50%; flex: none;
@@ -766,6 +754,17 @@ blog_live_time();
     background: #f59e0b;
     box-shadow: 0 0 0 3px rgba(245, 158, 11, .16);
     animation: none;
+  }
+  #footer #visitor-geo .vg-who {
+    display: inline-flex;
+    align-items: baseline;
+    white-space: nowrap;
+  }
+  #footer #visitor-geo .vg-label {
+    font-size: .95em;
+    letter-spacing: .2px;
+    color: inherit;
+    opacity: .8;
   }
   #footer #visitor-geo .vg-ip {
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -959,7 +958,7 @@ blog_live_time();
   function fail() {
     var box = document.getElementById(BOX_ID);
     if (!box) return;
-    box.querySelector('.vg-ip').textContent = 'IP 识别失败';
+    box.querySelector('.vg-ip').textContent = '识别失败';
     box.querySelector('.vg-loc').textContent = '（第三方接口暂无响应）';
     box.querySelector('.vg-dot').classList.add('warn');
   }
@@ -995,7 +994,10 @@ blog_live_time();
     box.setAttribute('title', '这里显示的是你本次访问的公网 IP 与归属地，仅你可见；本站不做记录');
     box.innerHTML =
       '<span class="vg-dot"></span>' +
-      '<span class="vg-ip">正在识别…</span>' +
+      '<span class="vg-who">' +
+        '<span class="vg-label">当前访问 IP：</span>' +
+        '<span class="vg-ip">正在识别…</span>' +
+      '</span>' +
       '<span class="vg-sep">｜</span>' +
       '<span class="vg-loc">正在识别…</span>';
 
